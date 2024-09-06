@@ -20,37 +20,33 @@ enum LogLevelDetails
 };
 
 
-enum LogCode init_logger();
-enum LogCode destroy_logger();
+enum LogCode init_logger(void);
+enum LogCode destroy_logger(void);
 
 enum LogCode set_level_details(const unsigned level_details);
 enum LogCode set_logout_file(const char * const filename);
 
 
 enum LogCode internal_func_log(const char* const func_name, const int line_num, 
-                               const char* const filename,
-                               enum LogLevelDetails level_details,
-                               const bool check, ...);
+                               const char* const filename, enum LogLevelDetails level_details,
+                               const char* const format, ...);
 
-#define logg(log_level_details, ...) \
-            internal_func_log(__func__, __LINE__, __FILE__, log_level_details, false, __VA_ARGS__)
+#define logg(log_level_details, format, ...)                                                       \
+            internal_func_log(__func__, __LINE__, __FILE__, log_level_details, format,             \
+                              ##__VA_ARGS__)
 
 
 #ifndef NDEBUG
 
-#define INTERNAL_MACRO_FIRST_HELPER(first, ...) first
-#define INTERNAL_MACRO_FIRST(...) INTERNAL_MACRO_FIRST_HELPER(__VA_ARGS__, throwaway)
-
-
-#define lassert(...) \
-            do \
-            { \
-                if(!(INTERNAL_MACRO_FIRST(__VA_ARGS__))) \
-                { \
-                    internal_func_log(__func__, __LINE__, __FILE__, LOG_LEVEL_DETAILS_ERROR, \
-                                      __VA_ARGS__); \
-                    exit(EXIT_FAILURE); \
-                } \
+#define lassert(check, ...)                                                                        \
+            do                                                                                     \
+            {                                                                                      \
+                if(!(check))                                                                       \
+                {                                                                                  \
+                    internal_func_log(__func__, __LINE__, __FILE__, LOG_LEVEL_DETAILS_ERROR,       \
+                                      #check, ##__VA_ARGS__);                                      \
+                    exit(EXIT_FAILURE);                                                            \
+                }                                                                                  \
             } while(0)
 
 #else /*NDEBUG*/

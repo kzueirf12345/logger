@@ -9,7 +9,7 @@
 #define START_LOGGING_LINE "========START LOGGING======="
 #define END_LOGGING_LINE   "=========END LOGGING========"
 
-enum LogCode log_info(const char* const log_name_str, const char* const format, 
+enum LogCode log_write(const char* const log_name_str, const char* const format, 
                       const char* const func_name, const char* const filename, const int line_num,
                       va_list* const args);
 enum LogCode log_lassert(const char* const format, const char* const func_name,
@@ -23,15 +23,17 @@ static struct
     FILE* logout;
 } LOGGER = {.output_flags = LOG_LEVEL_DETAILS_ZERO, .logout_name = NULL, .logout = NULL};
 
-
-
-enum LogCode init_logger()
+static void LOGGER_init_assert(void)
 {
-    if (LOGGER.logout_name || LOGGER.logout)
-    {
-        perror("Logger already init\n");
-        return LOG_CODE_FAILURE;
-    }
+    assert(LOGGER.logout && "LOGGER is not init");
+    assert(LOGGER.logout_name && "LOGGER is not init");
+}
+
+
+enum LogCode init_logger(void)
+{
+    assert(!LOGGER.logout_name || !LOGGER.logout);
+
     LOGGER.logout_name = "./logout.log";
     if (!(LOGGER.logout = fopen(LOGGER.logout_name, "ab")))
     {
@@ -47,7 +49,7 @@ enum LogCode init_logger()
     return LOG_CODE_SUCCES;
 }
 
-enum LogCode destroy_logger()
+enum LogCode destroy_logger(void)
 {
     fprintf(LOGGER.logout, "\n" END_LOGGING_LINE "\n");
 
@@ -69,11 +71,8 @@ enum LogCode destroy_logger()
 
 enum LogCode set_level_details(const unsigned level_details)
 {
-    if (LOG_LEVEL_DETAILS_ALL > level_details)
-    {  
-        perror("Incorrect level details flag\n");
-        return LOG_CODE_FAILURE;
-    }
+    LOGGER_init_assert();
+    assert((LOG_LEVEL_DETAILS_ALL <= level_details) && "Incorrect level details flag");
 
     LOGGER.output_flags = level_details;
 
@@ -82,6 +81,7 @@ enum LogCode set_level_details(const unsigned level_details)
 
 enum LogCode set_logout_file(const char* const filename)
 {
+    LOGGER_init_assert();
     assert(filename);
 
     if (LOGGER.logout)
@@ -110,23 +110,19 @@ enum LogCode set_logout_file(const char* const filename)
 enum LogCode internal_func_log(const char* const func_name, const int line_num, 
                                const char* const filename,
                                enum LogLevelDetails level_details,
-                               const bool check, ...)
+                               const char* const format, ...)
 {
+    LOGGER_init_assert();
     assert(func_name);
     assert(filename);
 
-    va_list args;
-    va_start(args, check);
+    va_list args = {};
+    va_start(args, format);
 
-    const char* format = va_arg(args, const char*);
-    if (!format)
-    {
-        format = "";
-    }
 
     if (LOGGER.output_flags & LOG_LEVEL_DETAILS_INFO & level_details)
     {
-        if (log_info("LOG_INFO", format, func_name, filename, line_num, &args) == LOG_CODE_FAILURE)
+        if (log_write("LOG_INFO", format, func_name, filename, line_num, &args) == LOG_CODE_FAILURE)
         {  
             perror("log_info error\n");
             return LOG_CODE_FAILURE;
@@ -134,7 +130,8 @@ enum LogCode internal_func_log(const char* const func_name, const int line_num,
     }
     else if(LOGGER.output_flags & LOG_LEVEL_DETAILS_ERROR & level_details)
     {
-        if (log_info("LOG_ERROR", format, func_name, filename, line_num, &args) == LOG_CODE_FAILURE)
+        if (log_write("LOG_ERROR", format, func_name, filename, line_num, &args)
+            == LOG_CODE_FAILURE)
         {  
             perror("log_info error\n");
             return LOG_CODE_FAILURE;
@@ -151,11 +148,13 @@ enum LogCode internal_func_log(const char* const func_name, const int line_num,
 }
 
 
+
 #define MAX_TIME_STR_LEN_ 64
-enum LogCode log_info(const char* const log_name_str, const char* const format, 
-                      const char* const func_name, const char* const filename, const int line_num,
-                      va_list* const args)
+enum LogCode log_write(const char* const log_name_str, const char* const format, 
+                       const char* const func_name, const char* const filename, const int line_num,
+                       va_list* const args)
 {
+    LOGGER_init_assert();
     assert(log_name_str);
     assert(format);
     assert(args);
@@ -164,7 +163,7 @@ enum LogCode log_info(const char* const log_name_str, const char* const format,
 
     const time_t current_time = time(NULL);
     const struct tm * const current_local_time = localtime(&current_time);
-    char current_time_str[MAX_TIME_STR_LEN_];
+    char current_time_str[MAX_TIME_STR_LEN_] = {};
     if (strftime(current_time_str, MAX_TIME_STR_LEN_, "%Y %b %d %X", current_local_time) <= 0)
     {
         perror("strftime format error\n");
@@ -178,6 +177,7 @@ enum LogCode log_info(const char* const log_name_str, const char* const format,
         return LOG_CODE_FAILURE;
     }
  
+
     if (vfprintf(LOGGER.logout, format, *args) < 0)
     {  
         perror("vprintf error\n");
@@ -194,6 +194,7 @@ enum LogCode log_info(const char* const log_name_str, const char* const format,
 enum LogCode log_lassert(const char* const format, const char* const func_name,
                          const char* const filename, const int line_num, va_list* const args)
 {
+    LOGGER_init_assert();
     assert(format);
     assert(args);
     assert(func_name);
@@ -211,6 +212,7 @@ enum LogCode log_lassert(const char* const format, const char* const func_name,
         perror("vprintf error\n");
         return LOG_CODE_FAILURE;
     }
+    fprintf(stderr, "\n");
     
     fprintf(LOGGER.logout, "\n" END_LOGGING_LINE "\n");
 
