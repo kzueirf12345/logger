@@ -29,6 +29,7 @@ SANITIZER = -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,fl
 DEBUG_FLAGS = -D _DEBUG  -ggdb -Og -g3 -D_FORTIFY_SOURCES=3 $(SANITIZER)
 RELEASE_FLAGS = -DNDEBUG -O2 $(SANITIZER)
 FLAGS += $(if $(DEBUG_),$(DEBUG_FLAGS),$(RELEASE_FLAGS))
+FLAGS += $(ADD_FLAGS)
 
 
 DIRS = 
