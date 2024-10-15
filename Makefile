@@ -1,5 +1,3 @@
-.PHONY: all clean
-
 PROJECT_NAME = logger
 
 BUILD_DIR = ./build
@@ -27,13 +25,13 @@ SANITIZER = -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,fl
 		shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
 DEBUG_FLAGS = -D _DEBUG  -ggdb -Og -g3 -D_FORTIFY_SOURCES=3 $(SANITIZER)
-RELEASE_FLAGS = -DNDEBUG -O2 $(SANITIZER)
+RELEASE_FLAGS = -DNDEBUG -O2
 FLAGS += $(if $(DEBUG_),$(DEBUG_FLAGS),$(RELEASE_FLAGS))
 FLAGS += $(ADD_FLAGS)
 
 
 DIRS = 
-BUILD_DIRS = $(DIRS:%=$(BUILD_DIR)/%)
+BUILD_DIRS += $(DIRS:%=$(BUILD_DIR)/%)
 
 SOURCES = logger.c
 
@@ -47,13 +45,14 @@ all: build
 build: $(OBJECTS_REL_PATH)
 	ar -rcs lib$(PROJECT_NAME).a $(OBJECTS_REL_PATH)
 
-$(BUILD_DIR)/%.o : ./%.c | $(BUILD_DIRS)
+$(BUILD_DIR)/%.o : ./$(SRC_DIR)/%.c | $(BUILD_DIRS)
 	@$(COMPILER) $(FLAGS) -c -MMD -MP $< -o $@
 
 -include $(DEPS_REL_PATH)
 
 $(BUILD_DIRS):
 	mkdir $@
+
 
 clean_all: clean_log clean_obj clean_deps clean_out
 
