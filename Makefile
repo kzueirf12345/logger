@@ -1,10 +1,14 @@
+.PHONY: all build clean clean_all clean_log clean_out clean_obj clean_deps clean_txt clean_bin
+
 PROJECT_NAME = logger
 
 BUILD_DIR = ./build
 SRC_DIR = ./src
 COMPILER = gcc
 
-DEBUG_ = 1
+DEBUG_ ?= 1
+
+ifeq ($(origin FLAGS), undefined)
 
 FLAGS =	-Wall -Wextra -Waggressive-loop-optimizations \
 		-Wmissing-declarations -Wcast-align -Wcast-qual -Wchar-subscripts \
@@ -26,7 +30,15 @@ SANITIZER = -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,fl
 
 DEBUG_FLAGS = -D _DEBUG  -ggdb -Og -g3 -D_FORTIFY_SOURCES=3 $(SANITIZER)
 RELEASE_FLAGS = -DNDEBUG -O2
-FLAGS += $(if $(DEBUG_),$(DEBUG_FLAGS),$(RELEASE_FLAGS))
+
+ifneq ($(DEBUG_),0)
+FLAGS += $(DEBUG_FLAGS)
+else
+FLAGS += $(RELEASE_FLAGS)
+endif
+
+endif
+
 FLAGS += $(ADD_FLAGS)
 
 
@@ -47,7 +59,7 @@ build: lib$(PROJECT_NAME).a
 lib$(PROJECT_NAME).a: $(OBJECTS_REL_PATH)
 	ar -rcs lib$(PROJECT_NAME).a $(OBJECTS_REL_PATH)
 
-$(BUILD_DIR)/%.o : ./$(SRC_DIR)/%.c | $(BUILD_DIRS)
+$(BUILD_DIR)/%.o : ./$(SRC_DIR)/%.c | ./$(BUILD_DIR)/ $(BUILD_DIRS)
 	@$(COMPILER) $(FLAGS) -c -MMD -MP $< -o $@
 
 -include $(DEPS_REL_PATH)
@@ -55,6 +67,8 @@ $(BUILD_DIR)/%.o : ./$(SRC_DIR)/%.c | $(BUILD_DIRS)
 $(BUILD_DIRS):
 	mkdir $@
 
+./$(BUILD_DIR)/:
+	mkdir $@
 
 clean_all: clean_log clean_obj clean_deps clean_out
 
