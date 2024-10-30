@@ -24,13 +24,13 @@ static_assert(LOGG_ERROR_SUCCESS == 0);
 
 const char* logg_strerror(const enum LoggError);
 
-#define logg_error_handle(call_func, ...)                                                           \
+#define LOGG_ERROR_HANDLE(call_func, ...)                                                           \
     do {                                                                                            \
-        logg_error_handler = call_func;                                                             \
+        enum LoggError logg_error_handler = call_func;                                              \
         if (logg_error_handler)                                                                     \
         {                                                                                           \
             fprintf(stderr, "Can't " #call_func". Logg error: %s\n",                                \
-                            input_strerror(logg_error_handler));                                    \
+                            logg_strerror(logg_error_handler));                                    \
             __VA_ARGS__                                                                             \
             return logg_error_handler;                                                              \
         }                                                                                           \
