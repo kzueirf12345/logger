@@ -91,9 +91,6 @@ enum LoggError logger_set_logout_file(const char* const filename)
     LOGGER_is_init_asserts_();
     assert(filename);
 
-    if (LOGGER.logout)
-        fprintf(LOGGER.logout,  "\n");
-
     LOGGER.logout_name = filename;
 
     if (LOGGER.logout && fclose(LOGGER.logout))
@@ -109,6 +106,11 @@ enum LoggError logger_set_logout_file(const char* const filename)
     
     
     return LOGG_ERROR_SUCCESS;
+}
+
+const char* logger_get_logout_filename(void)
+{
+    return LOGGER.logout_name;
 }
 
 
