@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdio.h>
 
 typedef struct place_in_code_t
 {
