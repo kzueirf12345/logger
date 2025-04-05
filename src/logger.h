@@ -21,7 +21,7 @@ enum LoggError
     LOGG_ERROR_SUCCESS = 0,
     LOGG_ERROR_FAILURE = 1
 };
-static_assert(LOGG_ERROR_SUCCESS == 0);
+static_assert(LOGG_ERROR_SUCCESS == 0, "");
 
 const char* logg_strerror(const enum LoggError);
 
@@ -47,7 +47,7 @@ enum LogLevelDetails
     LOG_LEVEL_DETAILS_DUMB    = 0b1000u,
     LOG_LEVEL_DETAILS_ALL     = 0b1111u,
 };
-static_assert(LOG_LEVEL_DETAILS_ZERO == 0);
+static_assert(LOG_LEVEL_DETAILS_ZERO == 0, "");
 
 
 enum LoggError logger_ctor(void);
